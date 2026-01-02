@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Free Image Compressor Online | Compress & Compare Images</title>
+
+    <meta name="description" content="Free online photo and image compressor tool. Compress image size, compare original and compressed images without losing quality. Works on mobile and desktop.">
+
+    <meta name="keywords" content="photo compress, image compress, image compressor online, compress image, reduce image size, image compare">
+
+    <meta name="robots" content="index, follow">
+
+    <style>
+        body {font-family: Arial, sans-serif; background: #f0f0f0; text-align: center; padding: 20px;}
+        .container {max-width: 800px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.1);}
+        h1 {color: #333;}
+        h2 {color: #007bff; margin-top: 30px;}
+        p {font-size: 18px; color: #555; line-height: 1.6;}
+        #drop-zone {border: 3px dashed #ccc; padding: 50px; margin: 30px 0; border-radius: 10px; background: #fafafa; cursor: pointer; font-size: 18px;}
+        #drop-zone.dragover {border-color: #007bff; background: #e7f3ff;}
+        img {max-width: 100%; height: auto; margin: 20px 0; border: 1px solid #ddd; border-radius: 8px;}
+        .info {font-size: 18px; margin: 15px 0; color: #555;}
+        button {padding: 12px 30px; font-size: 18px; background: #007bff; color: white; border: none; border-radius: 6px; cursor: pointer;}
+        button:hover {background: #0056b3;}
+        label {font-size: 18px; font-weight: bold;}
+        #quality-slider {width: 80%; margin: 30px auto;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Image Compressor</h1>
+
+        <h2>Compress Image Online for Free</h2>
+        <p>
+        This free image compressor tool helps you compress photos and images online without losing quality.
+        You can compare original and compressed images easily.
+        </p>
+
+        <h2>Why Use This Image Compressor?</h2>
+        <p>
+        ✔ No upload to server<br>
+        ✔ Works on mobile<br>
+        ✔ Free image compression tool<br>
+        ✔ Compare original and compressed image size
+        </p>
+
+        <p>Upload an image, compress it, and download the smaller version<br><small>(Everything happens in your browser – no data leaves your phone)</small></p>
+
+        <label>Compression Quality: <span id="quality-value">80</span>%</label>
+        <input type="range" id="quality-slider" min="10" max="100" value="80">
+
+        <div id="drop-zone">
+            Drag & drop an image here<br>or click to select
+            <input type="file" id="file-input" accept="image/*" style="display:none;">
+        </div>
+
+        <div id="original-section" style="display:none;">
+            <h2>Original Image</h2>
+            <p class="info" id="original-info"></p>
+            <img id="original-img" alt="Original">
+        </div>
+
+        <div id="compressed-section" style="display:none;">
+            <h2>Compressed Image</h2>
+            <p class="info" id="compressed-info"></p>
+            <img id="compressed-img" alt="Compressed">
+            <br><br>
+            <button id="download-btn">Download Compressed Image</button>
+        </div>
+    </div>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const qualitySlider = document.getElementById('quality-slider');
+        const qualityValue = document.getElementById('quality-value');
+        const originalSection = document.getElementById('original-section');
+        const originalImg = document.getElementById('original-img');
+        const originalInfo = document.getElementById('original-info');
+        const compressedSection = document.getElementById('compressed-section');
+        const compressedImg = document.getElementById('compressed-img');
+        const compressedInfo = document.getElementById('compressed-info');
+        const downloadBtn = document.getElementById('download-btn');
+
+        let originalFile;
+
+        qualitySlider.addEventListener('input', () => {
+            qualityValue.textContent = qualitySlider.value;
+            if (originalFile) compressImage(originalFile);
+        });
+
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length) {
+                handleFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) {
+                handleFile(fileInput.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file!');
+                return;
+            }
+            originalFile = file;
+            const sizeKB = (file.size / 1024).toFixed(2);
+            originalInfo.textContent = `Original: ${file.name} | Size: ${sizeKB} KB`;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                originalImg.src = e.target.result;
+                originalSection.style.display = 'block';
+                compressImage(file);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function compressImage(file) {
+            const quality = qualitySlider.value / 100;
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                let width = img.width;
+                let height = img.height;
+                const maxDim = 1600;
+                if (width > maxDim || height > maxDim) {
+                    if (width > height) {
+                        height = Math.round(height * maxDim / width);
+                        width = maxDim;
+                    } else {
+                        width = Math.round(width * maxDim / height);
+                        height = maxDim;
+                    }
+                }
+                canvas.width = width;
+                canvas.height = height;
+                ctx.drawImage(img, 0, 0, width, height);
+
+                canvas.toBlob((blob) => {
+                    const compressedSizeKB = (blob.size / 1024).toFixed(2);
+                    const savings = (((file.size - blob.size) / file.size) * 100).toFixed(1);
+                    compressedInfo.textContent = `Compressed | Size: ${compressedSizeKB} KB | Savings: ${savings}%`;
+
+                    const url = URL.createObjectURL(blob);
+                    compressedImg.src = url;
+                    compressedSection.style.display = 'block';
+
+                    downloadBtn.onclick = () => {
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'compressed_' + file.name;
+                        a.click();
+                    };
+                }, file.type, quality);
+            };
+            img.src = URL.createObjectURL(file);
+        }
+    </script>
+</body>
+</html>
